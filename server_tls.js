@@ -120,6 +120,6 @@ class SecurifiServerController {
 }
 
 
-let securifiServer = new simulator.SecurifiServerSimulator(1028);
-let controller = new simulator.SecurifiServerController(5000, securifiServer);
+let securifiServer = new SecurifiServerSimulator(1028);
+let controller = new SecurifiServerController(5000, securifiServer);
 controller.SetupRoutes();
