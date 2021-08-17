@@ -15,7 +15,6 @@ class SecurifiServerSimulator {
         }, (socket) => {
             this.connectedSockets.push(socket);
             console.log('server connected', socket.authorized ? 'authorized' : 'unauthorized');
-            // socket.write(JSON.stringify({foo : 'test', msg : 'did you get it ?'}) + "\n");
             this.ConfigureListeners(socket);
         });
 
@@ -31,6 +30,10 @@ class SecurifiServerSimulator {
             this.connectedSockets.map(s => {
                 s.destroy();
             });
+        });
+
+        socket.on('data', function(data){
+            console.log(`data received by securifi simulator: ${data}`);
         });
 
         socket.on('error', function(err){
