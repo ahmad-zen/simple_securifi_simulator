@@ -37,11 +37,12 @@ class SecurifiServerSimulator {
             console.log(`command received by securifi simulator: ${data}`);
             //{"MobileInternalIndex":34,"CommandType":"UpdateDeviceIndex","AlmondMAC":"251176216363884","ID":"10","Index":10,"Value":"0a 0b 01 00"}
             let command = JSON.parse(data);
-            if(command.Index == NaN){
-
-            }
             if(command.CommandType = 'UpdateDeviceIndex' && command.Value.substring(command.Value.length - 5).startsWith('01'))
             {
+                if(command.Index == NaN){
+                    console.log("no index, cannot respond");
+                    return;
+                }
                 //{"CommandType":"DynamicIndexUpdated","Action":"UpdateIndex","HashNow":"9dca5eee5590afb2ad5736c38490e8b3","Devices":{"10":{"DeviceValues":{"10":{"Name":"CUSTOM_MESSAGE","Value":"01 0a 0b 0d 01 00 03 0b 2e 02 01 02 20 00","Type":"92","EndPoint":"1","CommandClassID":"-1","CommandIndex":"-1"}}}},"AlmondMAC":"251176216363884","time":"1629243631.59693"}
                 let response = JSON.stringify({
                     "CommandType":"DynamicIndexUpdated",
