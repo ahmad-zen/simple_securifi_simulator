@@ -60,7 +60,7 @@ class SecurifiServerSimulator {
                                 "DeviceValues":{
                                     [command.Index]:{
                                         "Name":"CUSTOM_MESSAGE",
-                                        "Value": firmwareVersion,
+                                        "Value": this.firmwareVersion,
                                         "Type":"92",
                                         "EndPoint":"1",
                                         "CommandClassID":"-1",
@@ -89,7 +89,7 @@ class SecurifiServerSimulator {
 
     UpdateFirmwareVersion(data){
         //update the saved firmware variable 
-        firmwareVersion = data;
+        this.firmwareVersion = data;
     }
 }
 
