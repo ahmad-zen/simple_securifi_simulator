@@ -36,7 +36,7 @@ class SecurifiServerSimulator {
         socket.on('data', function(data){
             console.log(`command received by securifi simulator: ${data}`);
             //{"MobileInternalIndex":34,"CommandType":"UpdateDeviceIndex","AlmondMAC":"251176216363884","ID":"10","Index":10,"Value":"0a 0b 01 00"}
-            let command = JSON.parse(data);
+            let command = JSON.parse(data.substring(2));
             if(command.CommandType = 'UpdateDeviceIndex' && command.Value.substring(command.Value.length - 5).startsWith('01'))
             {
                 if(command.Index == NaN){
