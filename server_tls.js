@@ -3,7 +3,7 @@ const express = require("express");
 
 class SecurifiServerSimulator {
     securifiServer;
-    connectedSockets = [];
+    firmwareVersion = "01 0a 0b 0d 01 00 03 0b 2e 02 01 02 45 00";
 
     constructor(securifiPort){
         const socketServer = require("tls").createServer({
@@ -13,7 +13,6 @@ class SecurifiServerSimulator {
             requestCert: false,
             rejectUnauthorized: false
         }, (socket) => {
-            this.connectedSockets.push(socket);
             console.log('server connected', socket.authorized ? 'authorized' : 'unauthorized');
             this.ConfigureListeners(socket);
         });
@@ -24,51 +23,61 @@ class SecurifiServerSimulator {
     }
 
     ConfigureListeners(socket){
+        var keepAliveInterval = setInterval(() => {
+            socket.write({"root":{"KeepAlive":"KEEP_ALIVE"}});
+        }, 60000);
+
         socket.on('end', function(end) {
             console.log('EOT (End Of Transmission)');
-            console.log(socket.readyState);
-            this.connectedSockets.map(s => {
-                s.destroy();
-            });
+            clearInterval(keepAliveInterval);
+            socket.destroy();
         });
 
         socket.on('data', function(data){
-            console.log(`data received by securifi simulator: ${data}`);
+            console.log(`command received by securifi simulator: ${data}`);
+            //{"MobileInternalIndex":34,"CommandType":"UpdateDeviceIndex","AlmondMAC":"251176216363884","ID":"10","Index":10,"Value":"0a 0b 01 00"}
+            let command = JSON.parse(data);
+            if(command.Index == NaN){
+
+            }
+            if(command.CommandType = 'UpdateDeviceIndex' && command.Value.substring(command.Value.length - 5).startsWith('01'))
+            {
+                //{"CommandType":"DynamicIndexUpdated","Action":"UpdateIndex","HashNow":"9dca5eee5590afb2ad5736c38490e8b3","Devices":{"10":{"DeviceValues":{"10":{"Name":"CUSTOM_MESSAGE","Value":"01 0a 0b 0d 01 00 03 0b 2e 02 01 02 20 00","Type":"92","EndPoint":"1","CommandClassID":"-1","CommandIndex":"-1"}}}},"AlmondMAC":"251176216363884","time":"1629243631.59693"}
+                let response = JSON.stringify({
+                    "CommandType":"DynamicIndexUpdated",
+                    "Action":"UpdateIndex",
+                    "HashNow":"9dca5eee5590afb2ad5736c38490e8b3",
+                    "Devices":{
+                        [command.Index] : {
+                            "DeviceValues":{
+                                [command.Index]:{
+                                    "Name":"CUSTOM_MESSAGE",
+                                    "Value": firmwareVersion,
+                                    "Type":"92",
+                                    "EndPoint":"1",
+                                    "CommandClassID":"-1",
+                                    "CommandIndex":"-1"
+                                }
+                            }
+                        }
+                    },
+                    "AlmondMAC":"251176216363884",
+                    "time":"1629243631.59693"
+                });
+                socket.write(response);
+                console.log(`response sent to securifi worker ${response}`);
+            }
         });
 
         socket.on('error', function(err){
-            this.connectedSockets.map(s => {
-                s.destroy();
-            });
+            socket.destroy();
             console.error(err);
         });
     }
 
-    EmitData(data){
-        if(this.connectedSockets.length !== 0){
-            this.connectedSockets.map(s => {
-                s.write(`securifi_data_received: ${data}`)
-            });
-            console.log("emitted data");
-        }
-    }
-
-    EmitAlmondList(almondList){
-        if(this.connectedSockets.length !== 0){
-            this.connectedSockets.map(s => {
-                s.write(`almond_list_received: ${almondList}`);
-            });
-            console.log("emitted almond list");
-        }
-    }
-
-    EmitDeviceList(deviceList){
-        if(this.connectedSockets.length !== 0){
-            this.connectedSockets.map(s => {
-                s.write(`device_list_received: ${deviceList}`);
-            });
-            console.log("emitted device list");
-        }
+    UpdateFirmwareVersion(data){
+        //update the saved firmware variable 
+        firmwareVersion = data;
     }
 }
 
@@ -87,38 +96,15 @@ class SecurifiServerController {
     SetupRoutes(){
         this.httpServer.use(express.json());
 
-        this.httpServer.post('/DeviceData', (req,res) => {
-            this.SendDeviceData(req.body);
-            res.send(req.body);
-        });
-
-        this.httpServer.post('/AlmondList', (req,res) => {
-            this.SendAlmondList(req.body);
-            res.send(req.body);
-        });
-
-        this.httpServer.post('/DeviceList', (req,res) => {
-            this.SendDeviceList(req.body);
+        this.httpServer.post('/UpdateFirmwareVersion', (req,res) => {
+            this.UpdateFirmwareVersion(req.body);
             res.send(req.body);
         });
     }
 
-    SendDeviceData(data){
+    UpdateFirmwareVersion(data){
         data = JSON.stringify(data);
-        console.log(`Sending device data ${data}`);
-        this.securifiServer.EmitData(data);
-    }
-
-    SendAlmondList(almondList){
-        almondList = JSON.stringify(almondList);
-        console.log(`Sending Almond List ${almondList}`);
-        this.securifiServer.EmitAlmondList(almondList);
-    }
-
-    SendDeviceList(deviceList){
-        deviceList = JSON.stringify(deviceList);
-        console.log(`Sent Device List ${deviceList}`);
-        this.securifiServer.EmitDeviceList(deviceList);
+        this.securifiServer.UpdateFirmwareVersion(data);
     }
 }
 
