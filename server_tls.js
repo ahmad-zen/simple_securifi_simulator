@@ -39,7 +39,7 @@ class SecurifiServerSimulator {
             try {
                 let dataAsString = data+"";
                 let startOfObject = dataAsString.indexOf('{');
-                let endOfObject = dataAsString.indexOf('}');
+                let endOfObject = dataAsString.indexOf('}') + 1;
                 let jsonString = dataAsString.substring(startOfObject, endOfObject);
                 console.log(`JSON as string: ${jsonString}`);
 
