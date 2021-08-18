@@ -44,14 +44,14 @@ class SecurifiServerSimulator {
             //{"MobileInternalIndex":34,"CommandType":"UpdateDeviceIndex","AlmondMAC":"251176216363884","ID":"10","Index":10,"Value":"0a 0b 01 00"}
             try {
                 let dataAsString = data+"";
-                let splitCommands = dataAsString.split('{');
+                let splitCommands = dataAsString.split('}');
 
                 for(let i = 0; i < splitCommands.length; i++){
                     if(splitCommands[i] == ""){
                       continue;
                     }
                   
-                    let nextCommand = "{" + splitCommands[i];
+                    let nextCommand = splitCommands[i] + "}";
                     let startOfObject = nextCommand.indexOf('{');
                     let endOfObject = nextCommand.indexOf('}') + 1;
                     let jsonString = nextCommand.substring(startOfObject, endOfObject);
