@@ -77,7 +77,7 @@ class SecurifiServerSimulator {
                 }
             } catch (error) {
                 console.log("could not parse request");
-                console.log(err);
+                console.log(error);
             }
         });
 
