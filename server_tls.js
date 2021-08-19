@@ -44,12 +44,30 @@ class SecurifiServerSimulator {
             //{"MobileInternalIndex":34,"CommandType":"UpdateDeviceIndex","AlmondMAC":"251176216363884","ID":"10","Index":10,"Value":"0a 0b 01 00"}
             try {
                 let dataAsString = data+"";
-                let splitCommands = dataAsString.split('}');
+                if(dataAsString.trim().endsWith('</root>')){
+                    let loginResponse = {
+                        "LoginResponse": {     
+                          "$": {
+                            "success": "true"
+                          },
+                          "UserID": "522244940",
+                          "TempPass": "8f1e274981d87ebb31009d5adb358810d8a9e16304a197f3f8117d10d7ea0d86d641f0ac2b31e023c9a9cf75a6ccdc29006f568bf6cf06035d8a153efdff7bb5",
+                          "IsActivated": "1",
+                          "MinutesRemaining": "undefined"
+                        }
+                    };
+                    socket.write(JSON.stringify(loginResponse));
+                    console.log(`success response sent to securifi worker ${responseSuccess}`);
+                    return;
+                }
 
+                let splitCommands = dataAsString.split('}');
                 for(let i = 0; i < splitCommands.length; i++){
                     if(splitCommands[i] == ""){
                       continue;
                     }
+
+
                   
                     let nextCommand = splitCommands[i] + "}";
                     let startOfObject = nextCommand.indexOf('{');
@@ -72,7 +90,7 @@ class SecurifiServerSimulator {
                             "HashNow":"9dca5eee5590afb2ad5736c38490e8b3",
                             "Devices":{
                                 [command.Index] : {
-                                    "DeviceValues":{
+                                    "DeviceValues" : {
                                         [command.Index] : {
                                             "Name":"CUSTOM_MESSAGE",
                                             "Value": this.firmwareVersion,
@@ -89,6 +107,16 @@ class SecurifiServerSimulator {
                         });
                         socket.write(response);
                         console.log(`response sent to securifi worker ${response}`);
+
+                        //{"CommandType":"UpdateDeviceIndex","Success":"false","MobileInternalIndex":"80355","Reason":"Time Out"}
+                        let responseSuccess = JSON.stringify({
+                            "CommandType":"UpdateDeviceIndex",
+                            "Success":"true",
+                            "MobileInternalIndex":command.MobileInternalIndex,
+                            "Reason":""
+                        });
+                        socket.write(responseSuccess);
+                        console.log(`success response sent to securifi worker ${responseSuccess}`);
                     }
                 }
             } catch (error) {
