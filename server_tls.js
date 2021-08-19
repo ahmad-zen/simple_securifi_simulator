@@ -57,7 +57,7 @@ class SecurifiServerSimulator {
                         }
                     };
                     socket.write(JSON.stringify(loginResponse));
-                    console.log(`success response sent to securifi worker ${responseSuccess}`);
+                    console.log(`login response sent to securifi worker ${loginResponse}`);
                     return;
                 }
 
