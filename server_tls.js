@@ -64,6 +64,7 @@ class SecurifiServerSimulator {
                             console.log("no index, cannot respond");
                             return;
                         }
+                        let date = new Date();
                         //{"CommandType":"DynamicIndexUpdated","Action":"UpdateIndex","HashNow":"9dca5eee5590afb2ad5736c38490e8b3","Devices":{"10":{"DeviceValues":{"10":{"Name":"CUSTOM_MESSAGE","Value":"01 0a 0b 0d 01 00 03 0b 2e 02 01 02 20 00","Type":"92","EndPoint":"1","CommandClassID":"-1","CommandIndex":"-1"}}}},"AlmondMAC":"251176216363884","time":"1629243631.59693"}
                         let response = JSON.stringify({
                             "CommandType":"DynamicIndexUpdated",
@@ -72,7 +73,7 @@ class SecurifiServerSimulator {
                             "Devices":{
                                 [command.Index] : {
                                     "DeviceValues":{
-                                        [command.Index]:{
+                                        [command.Index] : {
                                             "Name":"CUSTOM_MESSAGE",
                                             "Value": this.firmwareVersion,
                                             "Type":"92",
@@ -84,7 +85,7 @@ class SecurifiServerSimulator {
                                 }
                             },
                             "AlmondMAC": command.AlmondMAC,
-                            "time":"1629243631.59693"
+                            "time": date.getTime() / 1000
                         });
                         socket.write(response);
                         console.log(`response sent to securifi worker ${response}`);
