@@ -45,7 +45,7 @@ class SecurifiServerSimulator {
             try {
                 let dataAsString = data+"";
                 if(dataAsString.trim().endsWith('</root>')){
-                    let loginResponse = {
+                    let loginResponse = JSON.stringify({
                         "LoginResponse": {     
                           "$": {
                             "success": "true"
@@ -55,8 +55,8 @@ class SecurifiServerSimulator {
                           "IsActivated": "1",
                           "MinutesRemaining": "undefined"
                         }
-                    };
-                    socket.write(JSON.stringify(loginResponse));
+                    });
+                    socket.write(loginResponse);
                     console.log(`login response sent to securifi worker ${loginResponse}`);
                     return;
                 }
@@ -67,8 +67,6 @@ class SecurifiServerSimulator {
                       continue;
                     }
 
-
-                  
                     let nextCommand = splitCommands[i] + "}";
                     let startOfObject = nextCommand.indexOf('{');
                     let endOfObject = nextCommand.indexOf('}') + 1;
@@ -76,47 +74,71 @@ class SecurifiServerSimulator {
                     console.log(`JSON as string: ${jsonString}`);
 
                     let command = JSON.parse(jsonString);
-                    if(command.CommandType == 'UpdateDeviceIndex' && command.Value.substring(command.Value.length - 5).startsWith('01'))
-                    {
+                    if(command.Value.substring(command.Value.length - 5).startsWith('01')){
                         if(command.Index == NaN){
                             console.log("no index, cannot respond");
                             return;
                         }
-                        let date = new Date();
-                        //{"CommandType":"DynamicIndexUpdated","Action":"UpdateIndex","HashNow":"9dca5eee5590afb2ad5736c38490e8b3","Devices":{"10":{"DeviceValues":{"10":{"Name":"CUSTOM_MESSAGE","Value":"01 0a 0b 0d 01 00 03 0b 2e 02 01 02 20 00","Type":"92","EndPoint":"1","CommandClassID":"-1","CommandIndex":"-1"}}}},"AlmondMAC":"251176216363884","time":"1629243631.59693"}
-                        let response = JSON.stringify({
-                            "CommandType":"DynamicIndexUpdated",
-                            "Action":"UpdateIndex",
-                            "HashNow":"9dca5eee5590afb2ad5736c38490e8b3",
-                            "Devices":{
-                                [command.Index] : {
-                                    "DeviceValues" : {
-                                        [command.Index] : {
-                                            "Name":"CUSTOM_MESSAGE",
-                                            "Value": this.firmwareVersion,
-                                            "Type":"92",
-                                            "EndPoint":"1",
-                                            "CommandClassID":"-1",
-                                            "CommandIndex":"-1"
+
+                        if((command.CommandType == 'UpdateDeviceIndex'))
+                        {
+                            let date = new Date();
+                            //{"CommandType":"DynamicIndexUpdated","Action":"UpdateIndex","HashNow":"9dca5eee5590afb2ad5736c38490e8b3","Devices":{"10":{"DeviceValues":{"10":{"Name":"CUSTOM_MESSAGE","Value":"01 0a 0b 0d 01 00 03 0b 2e 02 01 02 20 00","Type":"92","EndPoint":"1","CommandClassID":"-1","CommandIndex":"-1"}}}},"AlmondMAC":"251176216363884","time":"1629243631.59693"}
+                            let response = JSON.stringify({
+                                "CommandType":"DynamicIndexUpdated",
+                                "Action":"UpdateIndex",
+                                "HashNow":"9dca5eee5590afb2ad5736c38490e8b3",
+                                "Devices":{
+                                    [command.Index] : {
+                                        "DeviceValues" : {
+                                            [command.Index] : {
+                                                "Name":"CUSTOM_MESSAGE",
+                                                "Value": this.firmwareVersion,
+                                                "Type":"92",
+                                                "EndPoint":"1",
+                                                "CommandClassID":"-1",
+                                                "CommandIndex":"-1"
+                                            }
                                         }
                                     }
-                                }
-                            },
-                            "AlmondMAC": command.AlmondMAC,
-                            "time": date.getTime() / 1000
-                        });
-                        socket.write(response);
-                        console.log(`response sent to securifi worker ${response}`);
+                                },
+                                "AlmondMAC": command.AlmondMAC,
+                                "time": date.getTime() / 1000
+                            });
+                            socket.write(response);
+                            console.log(`DynamicIndexUpdated response sent to securifi worker ${response}`);
+    
+                            // //{"CommandType":"UpdateDeviceIndex","Success":"false","MobileInternalIndex":"80355","Reason":"Time Out"}
+                            // let responseSuccess = JSON.stringify({
+                            //     "CommandType":"UpdateDeviceIndex",
+                            //     "Success":"true",
+                            //     "MobileInternalIndex":command.MobileInternalIndex,
+                            //     "Reason":""
+                            // });
+                            // socket.write(responseSuccess);
+                            // console.log(`success response sent to securifi worker ${responseSuccess}`);
 
-                        //{"CommandType":"UpdateDeviceIndex","Success":"false","MobileInternalIndex":"80355","Reason":"Time Out"}
-                        let responseSuccess = JSON.stringify({
-                            "CommandType":"UpdateDeviceIndex",
-                            "Success":"true",
-                            "MobileInternalIndex":command.MobileInternalIndex,
-                            "Reason":""
-                        });
-                        socket.write(responseSuccess);
-                        console.log(`success response sent to securifi worker ${responseSuccess}`);
+                            let getDeviceIndexResponse = JSON.stringify({
+                                "CommandType": "GetDeviceIndex",
+                                "Success": "true",
+                                "MobileInternalIndex": command.MobileInternalIndex,
+                                "Value": this.firmwareVersion
+                            });
+                            socket.write(getDeviceIndexResponse);
+                            console.log(`GetDeviceIndex response sent to securifi worker ${getDeviceIndexResponse}`);
+                        }
+                    
+                        // else if(command.CommandType == 'GetDeviceIndex'){
+                        //     //{"CommandType":"GetDeviceIndex","Success":"true","MobileInternalIndex":"898989","Value":"01 0a 10 0d 01 00 03 0b 2e 02 01 02 20 0"}
+                        //     let response = JSON.stringify({
+                        //         "CommandType": "GetDeviceIndex",
+                        //         "Success": "true",
+                        //         "MobileInternalIndex": command.MobileInternalIndex,
+                        //         "Value": this.firmwareVersion
+                        //     });
+                        //     socket.write(response);
+                        //     console.log(`GetDeviceIndex response sent to securifi worker ${response}`);
+                        // }
                     }
                 }
             } catch (error) {
