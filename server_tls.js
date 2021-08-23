@@ -74,7 +74,7 @@ class SecurifiServerSimulator {
                     let startOfObject = nextCommand.indexOf('{');
                     let endOfObject = nextCommand.indexOf('}') + 1;
                     let jsonString = nextCommand.substring(startOfObject, endOfObject);
-                    // console.log(`JSON as string: ${jsonString}`);
+                    console.log(`JSON as string: ${jsonString}`);
 
                     let command = JSON.parse(jsonString);
                     if(command.Value.substring(command.Value.length - 5).startsWith('01')){
