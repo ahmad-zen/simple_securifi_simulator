@@ -6,6 +6,9 @@
     "start": "node ./server_tls.js"
   },
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1",
+    "tls-xml": "0.0.17"
   }
 }
